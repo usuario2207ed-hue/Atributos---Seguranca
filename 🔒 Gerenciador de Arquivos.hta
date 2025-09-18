@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>🔒 Gerenciador de Atributos & Segurança</title>
+    <HTA:APPLICATION
+        ID="FileManager"
+        APPLICATIONNAME="Gerenciador de Arquivos"
+        BORDER="dialog"
+        CAPTION="yes"
+        SHOWINTASKBAR="yes"
+        SINGLEINSTANCE="no"
+        SYSMENU="yes"
+        SCROLL="no"
+        WINDOWSTATE="normal"
+    />
+
+    <style>
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+        }
+        h2 {
+            color: #4cafef;
+        }
+        button {
+            margin: 6px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #4cafef;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #388ac1;
+        }
+        input {
+            width: 70%;
+            padding: 6px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        #log {
+            width: 100%;
+            height: 220px;
+            background: #111;
+            color: #0f0;
+            padding: 10px;
+            border: 1px solid #444;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🔒 Gerenciador de Atributos & Segurança</h2>
+
+    <label>📂 Caminho do Arquivo/Pasta:</label><br>
+    <input type="text" id="txtPath" placeholder="Ex: C:\MinhaPasta"><br>
+
+    <button onclick="SelecionarArquivo()">Escolher Arquivo</button>
+    <button onclick="SelecionarPasta()">Escolher Pasta</button>
+    <br><br>
+
+    <button onclick="Esconder()">Esconder</button>
+    <button onclick="Mostrar()">Mostrar</button>
+    <button onclick="Listar()">Listar Escondidos</button>
+    <br><br>
+
+    <button onclick="Criptografar()">Criptografar (EFS)</button>
+    <button onclick="Descriptografar()">Remover Criptografia</button>
+    <br><br>
+
+    <button onclick="Bloquear()">🚫 Bloquear Acesso (icacls)</button>
+    <button onclick="Desbloquear()">✅ Desbloquear Acesso</button>
+
+    <h3>📜 Log de Operações:</h3>
+    <div id="log"></div>
+
+<script language="VBScript">
+
+Sub Log(msg)
+    Dim logDiv
+    Set logDiv = Document.getElementById("log")
+    logDiv.innerHTML = logDiv.innerHTML & Now & " - " & msg & "<br>"
+    logDiv.scrollTop = logDiv.scrollHeight
+End Sub
+
+' --- CORRIGIDO: Selecionar Arquivo ---
+Sub SelecionarArquivo()
+    Dim objShell, objFile
+    Set objShell = CreateObject("Shell.Application")
+    Set objFile = objShell.BrowseForFolder(0, "Selecione o Arquivo:", &H4000, 0) ' &H4000 = permite selecionar arquivos
+    If Not objFile Is Nothing Then
+        Document.getElementById("txtPath").Value = objFile.Items().Item().Path
+        Log "Arquivo selecionado: " & objFile.Items().Item().Path
+    End If
+End Sub
+
+Sub SelecionarPasta()
+    Dim objShell, objFolder
+    Set objShell = CreateObject("Shell.Application")
+    Set objFolder = objShell.BrowseForFolder(0, "Selecione a Pasta:", 0, 0)
+    If Not objFolder Is Nothing Then
+        Document.getElementById("txtPath").Value = objFolder.Self.Path
+        Log "Pasta selecionada: " & objFolder.Self.Path
+    End If
+End Sub
+
+Sub Esconder()
+    Dim caminho
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        CreateObject("WScript.Shell").Run "cmd /c attrib +h +s +r """ & caminho & """", 0, True
+        Log "Arquivo/Pasta escondido: " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+Sub Mostrar()
+    Dim caminho
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        CreateObject("WScript.Shell").Run "cmd /c attrib -h -s -r """ & caminho & """", 0, True
+        Log "Arquivo/Pasta exibido: " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+Sub Listar()
+    Dim fso, tempFile, comando
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    tempFile = fso.GetSpecialFolder(2) & "\escondidos.log"
+
+    comando = "cmd /c attrib *.* /s | find ""H""" & " > """ & tempFile & """"
+    CreateObject("WScript.Shell").Run comando, 0, True
+
+    If fso.FileExists(tempFile) Then
+        Dim f
+        Set f = fso.OpenTextFile(tempFile, 1)
+        Do Until f.AtEndOfStream
+            Log f.ReadLine
+        Loop
+        f.Close
+        Log "Lista de arquivos/pastas escondidos salva em: " & tempFile
+    End If
+End Sub
+
+Sub Criptografar()
+    Dim caminho
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        CreateObject("WScript.Shell").Run "cmd /c cipher /e """ & caminho & """", 1, True
+        Log "Criptografia EFS aplicada em: " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+Sub Descriptografar()
+    Dim caminho
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        CreateObject("WScript.Shell").Run "cmd /c cipher /d """ & caminho & """", 1, True
+        Log "Criptografia EFS removida em: " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+Sub Bloquear()
+    Dim caminho, shell, user
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        Set shell = CreateObject("WScript.Shell")
+        user = shell.ExpandEnvironmentStrings("%username%")
+        shell.Run "cmd /c icacls """ & caminho & """ /deny " & user & ":F", 1, True
+        Log "Acesso negado (icacls) para usuário: " & user & " em " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+Sub Desbloquear()
+    Dim caminho, shell, user
+    caminho = Document.getElementById("txtPath").Value
+    If caminho <> "" Then
+        Set shell = CreateObject("WScript.Shell")
+        user = shell.ExpandEnvironmentStrings("%username%")
+        shell.Run "cmd /c icacls """ & caminho & """ /remove:d " & user, 1, True
+        Log "Acesso liberado (icacls) para usuário: " & user & " em " & caminho
+    Else
+        MsgBox "Informe ou selecione um caminho!"
+    End If
+End Sub
+
+</script>
+
+</body>
+</html>

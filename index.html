@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>🔒 PC - Atributos & Segurança</title>
+<style>
+body{font-family:Segoe UI,Arial,sans-serif;background:#1e1e1e;color:#fff;text-align:center;margin:0;padding-top:40px}
+h2{color:#4cafef}
+button{margin:10px;padding:12px 20px;border:none;border-radius:6px;background:#4cafef;color:#fff;cursor:pointer;font-size:15px}
+button:hover{background:#388ac1}
+a{color:#ff9800;text-decoration:none;font-weight:bold}
+a:hover{text-decoration:underline}
+#rodape{position:fixed;bottom:0;left:0;width:100%;background:#000;color:#0f0;padding:5px 10px;font-size:14px;white-space:nowrap;overflow:hidden}
+#textoRodape{display:inline-block;white-space:nowrap;border-right:2px solid #0f0;animation:digitar 5s steps(30,end)}
+@keyframes digitar{from{width:0}to{width:100%}}
+</style>
+</head>
+<body>
+
+<h2>🔒 Gerenciador de Atributos & Segurança para PC</h2>
+<p>Este painel abre e controla o arquivo <b>🔒 Gerenciador de Arquivos.hta</b>.</p>
+<button id="btnAbrir">🚀 Abrir Gerenciador de Arquivos</button>
+
+<div id="alerta" style="margin-top:20px;color:#f66;display:none;">
+⚠️ Seu navegador não suporta ActiveX.<br>Abra no <b>Internet Explorer</b> ou clique aqui:<br><br>
+<a href="🔒 Gerenciador de Arquivos.hta">👉 Abrir HTA Manualmente</a>
+</div>
+
+<div id="rodape"><span id="textoRodape"></span></div>
+
+<script>
+// === PROTEÇÃO POR SENHA ===
+var senhaCorreta = "🛡️Gf7&9!kL@2#xZ🗝️";
+var senha = prompt("Digite a senha para acessar o painel:");
+if(senha !== senhaCorreta){
+    alert("Senha incorreta! A página será fechada.");
+    document.body.innerHTML = "<h2 style='color:#f00'>Acesso negado!</h2>";
+    throw "Senha incorreta"; // interrompe o script
+}
+
+// === CÓDIGO FUNCIONAL OFUSCADO ===
+var htaProcess=null;
+function abrirHTA(){try{var s=new ActiveXObject("WScript.Shell");var c=location.pathname.replace(/[^\\\/]+$/,"")+"🔒 Gerenciador de Arquivos.hta";htaProcess=s.Exec('"' + c + '"');alert("Gerenciador aberto!")}catch(e){document.getElementById("alerta").style.display="block";alert("Erro ao abrir o HTA.\nExecute no Internet Explorer com ActiveX habilitado.");}}
+
+// Letreiro animado
+var texto="🌍 Desenvolvido por EDCELLTECH";
+var span=document.getElementById("textoRodape");
+function animarTexto(){span.textContent="";var i=0;var interval=setInterval(function(){span.textContent+=texto[i];i++;if(i===texto.length){clearInterval(interval)}},120);}
+animarTexto();
+setInterval(animarTexto,20000);
+
+document.getElementById("btnAbrir").onclick=abrirHTA;
+</script>
+
+</body>
+</html>
